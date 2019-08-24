@@ -83,5 +83,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void printData(View view) {
         Cursor c = db.rawQuery("Select * from Attendence", null);
+        Cursor dbCursor = db.query("Attendance", null, null, null, null, null, null);
+        String[] columnNames = dbCursor.getColumnNames();
+        String html = "";
     }
 }
