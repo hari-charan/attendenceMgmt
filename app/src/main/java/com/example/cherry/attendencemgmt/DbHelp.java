@@ -12,16 +12,16 @@ public class DbHelp extends SQLiteOpenHelper {
         super(c, "classDB", null, 1);
     }
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE tbl_teacher (name VARCHAR(20), password VARCHAR(20));");
+        db.execSQL("CREATE TABLE Attendence (date varchar(20))");
+        for(int i=0; i<40; ++i)
+        {
+            db.execSQL("Alter table Attendence add column 18025A05" + String.valueOf(i) + "int(1)");
+        }
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE tbl_teacher;");
+        db.execSQL("DROP TABLE tbl_teacher");
     }
 
-    public void clearDataBase()
-    {
-//        this.
-    }
 
 }
