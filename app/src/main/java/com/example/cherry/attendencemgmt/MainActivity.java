@@ -159,6 +159,10 @@ public class MainActivity extends AppCompatActivity {
         }
         String htmlCode = "<body>" +
                 "<table>";
+        htmlCode += "<tr> <td>" + "date"+"</td><td>";
+        htmlCode += TextUtils.join("</td><td>",list.get("date").toString().replace("[", "").replace("]", "").split(","));
+        htmlCode += "</td></tr>";
+        list.remove("date");
         for(Map.Entry<String, ArrayList<String >> e: list.entrySet())
         {
             htmlCode += "<tr> <td>" + e.getKey()+"</td><td>";
