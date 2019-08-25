@@ -1,24 +1,36 @@
 package com.example.cherry.attendencemgmt;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Build;
 import android.preference.PreferenceManager;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.TextView;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity {
-
+    private WebView myWebView;
     SQLiteDatabase db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +81,12 @@ public class MainActivity extends AppCompatActivity {
         {
             if((i&1) == 1)
             {
-                h.add("18025A05"+String.valueOf(i));
+                String d = String.valueOf(i);
+                if(d.length() < 2)
+                {
+                    d = "0"+d;
+                }
+                h.add("18025A05"+d);
             }
         }
         for(String d : dates) {
@@ -88,6 +105,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void printData(View view) {
+
+        WebView webView = new WebView(this);
+        webView.setWebViewClient(new WebViewClient() {
+
+            public boolean shouldOverrideUrlLoading(WebView view,
+                                                    WebResourceRequest request)
+            {
+                return false;
+            }
+
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onPageFinished(WebView view, String url)
+            {
+                createWebPrintJob(view);
+                myWebView = null;
+            }
+        });
+
         Cursor dbCursor = db.query("Attendence", null, null, null, null, null, null);
         String[] columnNames = dbCursor.getColumnNames();
         for(String i : columnNames)
@@ -100,11 +136,16 @@ public class MainActivity extends AppCompatActivity {
 
 
 //        ArrayList<String> dates = new ArrayList<>();
-        HashMap<String, ArrayList<String>> list = new HashMap<>();
+
+        //TreeMap to preserve ordering
+        TreeMap<String, ArrayList<String>> list = new TreeMap<>();
+        //Store the keys first
         for (String x : columnNames)
         {
             list.put(x, new ArrayList<String>());
         }
+
+        // for each row store it as a coulumn in list.
         while(c.moveToNext()) {
 //            for (int i = 0; i < c.getColumnCount(); i++) {
 ////                Log.d("col", String.valueOf(c.getString(i)));
@@ -116,12 +157,41 @@ public class MainActivity extends AppCompatActivity {
                 list.get(x).add(c.getString(c.getColumnIndex(x)));
             }
         }
-
+        String htmlCode = "<body>" +
+                "<table>";
         for(Map.Entry<String, ArrayList<String >> e: list.entrySet())
         {
+            htmlCode += "<tr> <td>" + e.getKey()+"</td><td>";
+            htmlCode += TextUtils.join("</td><td>",e.getValue().toString().replace("[", "").replace("]", "").split(","));
+            htmlCode += "</td></tr>";
             Log.d("dummy",String.valueOf(e.getKey())+e.getValue().toString());
         }
-
+        htmlCode += "</table></body>";
+        TextView  v =(TextView) findViewById(R.id.textView);
+        v.setText(htmlCode);
+        Log.d("html", htmlCode);
         c.close();
+
+
+        webView.loadDataWithBaseURL(null, htmlCode,
+                "text/HTML", "UTF-8", null);
+
+        myWebView = webView;
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void createWebPrintJob(WebView webView) {
+
+        PrintManager printManager = (PrintManager) this
+                .getSystemService(Context.PRINT_SERVICE);
+
+        PrintDocumentAdapter printAdapter =
+                webView.createPrintDocumentAdapter("MyDocument");
+
+        String jobName = getString(R.string.app_name) + " Print Test";
+
+        printManager.print(jobName, printAdapter,
+                new PrintAttributes.Builder().build());
     }
 }
