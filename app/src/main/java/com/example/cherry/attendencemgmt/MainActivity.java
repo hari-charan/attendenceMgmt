@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 
@@ -29,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
             //This method is for testing purpose
             insertData(null, null);
         }
+//        Cursor c = db.rawQuery("Select * from ")
+
     }
 
     /**
@@ -41,8 +44,9 @@ public class MainActivity extends AppCompatActivity {
 //        cst.bindString(1,date);
 //        cst.execute();
 //        for (String rollNo : h) {
-//            cst = db.compileStatement("update Attendence set" + rollNo + "= 1 where date = ?");
+//            cst = db.compileStatement("update Attendence set '" + rollNo + "' = 1 where date = ?");
 //            cst.bindString(1, date);
+//                cst.executeUpdateDelete();
 //        }
         /**Testing code
          * */
@@ -53,7 +57,8 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0; i<15; ++i)
         {
             cst.bindString(1, String.valueOf(i) + "-02-2019");
-            cst.execute();
+            if(cst.executeInsert() == -1 )
+                Log.d("Error", "not Inserted");
             dates.add(String.valueOf(i) + "-02-2019");
         }
 
@@ -69,8 +74,9 @@ public class MainActivity extends AppCompatActivity {
         }
         for(String d : dates) {
             for (String rollNo : h) {
-                cst = db.compileStatement("update Attendence set" + rollNo + " = 1 where date = ?");
+                cst = db.compileStatement("update Attendence set '" + rollNo + "' = 1 where date = ?");
                 cst.bindString(1, d);
+                cst.executeUpdateDelete();
             }
         }
     }
@@ -82,9 +88,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void printData(View view) {
-        Cursor c = db.rawQuery("Select * from Attendence", null);
-        Cursor dbCursor = db.query("Attendance", null, null, null, null, null, null);
+        Cursor dbCursor = db.query("Attendence", null, null, null, null, null, null);
         String[] columnNames = dbCursor.getColumnNames();
-        String html = "";
+        for(String i : columnNames)
+        {
+            Log.d("Columns", i);
+        }
+        dbCursor.close();
+        Cursor c = db.rawQuery("Select * from Attendence", null);
+        Log.d("Total Count:", String.valueOf(c.getCount()));
+
+
+//        ArrayList<String> dates = new ArrayList<>();
+        HashMap<String, ArrayList<String>> list = new HashMap<>();
+        for (String x : columnNames)
+        {
+            list.put(x, new ArrayList<String>());
+        }
+        while(c.moveToNext()) {
+//            for (int i = 0; i < c.getColumnCount(); i++) {
+////                Log.d("col", String.valueOf(c.getString(i)));
+////            }
+////
+////            Log.d("Row switch", "Next row");
+////            dates.add(c.getString(0));
+            for(String x : columnNames) {
+                list.get(x).add(c.getString(c.getColumnIndex(x)));
+            }
+        }
+
+        for(Map.Entry<String, ArrayList<String >> e: list.entrySet())
+        {
+            Log.d("dummy",String.valueOf(e.getKey())+e.getValue().toString());
+        }
+
+        c.close();
     }
 }
